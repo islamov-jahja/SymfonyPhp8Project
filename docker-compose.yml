@@ -1,0 +1,39 @@
+version: "3.2"
+
+services:
+  postgres:
+    ports:
+    - 5432:5432
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: symfony
+      POSTGRES_USER: yahya
+      POSTGRES_PASSWORD: islamov
+    volumes:
+      - ./postgresql/data:/var/lib/postgresql/data
+      - ./postgresql/dump:/dump
+  php-fpm:
+    image: webdevops/php-dev:8.0
+    hostname: php-fpm
+    volumes:
+      - ./symfony:/app
+    working_dir: /app
+    depends_on:
+      - postgres
+  nginx:
+    image: webdevops/nginx
+    ports:
+    - 80:80
+    volumes:
+    - ./symfony:/app
+    environment:
+      WEB_DOCUMENT_ROOT: /app/public
+      WEB_DOCUMENT_INDEX: index.php
+      WEB_PHP_SOCKET: php-fpm:9000
+  composer:
+    image: composer:1.8.5
+    command: install --ignore-platform-reqs
+    working_dir: /app
+    volumes:
+      - ./symfony:/app
